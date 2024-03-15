@@ -1,0 +1,60 @@
+1)
+CREATE TABLE Funcionario 
+( 
+  codFunc NUMBER(6,0) PRIMARY KEY,
+  nomeFunc VARCHAR2(30) NOT NULL,
+  sexo CHAR(1) NOT NULL CHECK (sexo IN ('f','F','m','M')),
+  dataAdmissao DATE, 
+  salario NUMBER(7,2),
+  codDep number(6,0) references Departamento );
+
+CREATE TABLE Departamento 
+( 
+  codDep NUMBER(6,0) Primary Key,
+  nomeDep VARCHAR2(30) );
+
+create table Projeto 
+( 
+   codProj number(6,0) Primary Key,
+   descricao varchar2(30) );
+
+create table funcProj
+(
+   codfunc number(6,0) references Funcionario,
+   codProj number(6,0) references Projeto,
+   tempo_loc date,
+  bonus_sal number(5,2));
+
+insert into Departamento values(100,'TI');
+insert into Departamento values(200,'RH');
+insert into Departamento values(300,'CTB');
+insert into Departamento values(400,'Logística');
+
+insert into Projeto values(111,'Aplicação WEB para Vendas');
+insert into Projeto values(222,'Projeto de restruturação RH');
+insert into Projeto values(333,'Aplicação WEB de Contabilidade');
+insert into Projeto values(444,'Aplicação Android para vendesores');
+insert into Projeto values(555,'Suporte para Logística');
+
+insert into Funcionario values(1,'Daniel','M',to_date('14-09-2013'),5000,200);
+insert into Funcionario values(2,'Lucas','M',to_date('19-11-2018'),25000, 300);
+insert into Funcionario values(3,'Abner','M',to_date('02-07-2006'),10000,100);
+insert into Funcionario values(4,'Rebeca','F',to_date('19-11-2009'),16000, 400);
+
+insert into funcProj values(1, 333,to_date('14/09/2024'),200);
+insert into funcProj values(2, 111,to_date('08/09/2024'),200);
+insert into funcProj values(3, 555,to_date('23/09/2024'),200);
+insert into funcProj values(4, 444,to_date('18/09/2024'),200);
+
+2)
+
+alter table Funcionario add (telefone varchar2(13));
+a) update table Funcionario set telefone = '(15)3238-1188' where codFunc = 3;
+b) delete from Funcionario where codDep = 300
+c) select nomeFunc, (salario * 1.1) as aumento, dataAdmissao from Funcionario;
+d) select from funcProj where bonus_sal != 0 and tempo_loc > 3;
+e) select nomeFunc from Funcionario where dataAdmissao BETWEEN(to_date('01/01/2024'),sysdate);
+f) select codDep from Funcionario;
+g) alternativa c
+h) select nomeFunc from Funcionario where salario BETWEEN(3000,5000);
+

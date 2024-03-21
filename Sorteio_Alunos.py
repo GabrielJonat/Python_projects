@@ -1,3 +1,4 @@
+#Sorteia alunos 200 versão 1.0 created by Gabriel Jonathan
 import random
 def Sorteio():
     def sortear(stop):
@@ -33,35 +34,41 @@ def Sorteio():
             jafoi.append(aluno)
     print('Alunos Sorteados:')
     print(sorteados)
-    print('Desejas sortear novamente algum aluno? (\'s\',\'n\')')
-    resp = input().upper()
-    if resp == 'S' or resp == 'SIM':
-        print('Informe os alunos a serem sorteados novamente separando-os por espaço:')
-        try:
-            listaResort = list(map(int,input().split()))
-        except:
-            print('Entrada de dados inválida!')
-            return
-        resort = len(listaResort)
-        if resort >= len(sorteados):
-            print('Sorteio inválido!')
-            return
-        for ele in listaResort:
+    def resorteio():
+        print('Desejas sortear novamente algum aluno? (\'s\',\'n\')')
+        resp = input().upper()
+        if resp == 'S' or resp == 'SIM':
+            print('Informe os alunos a serem sorteados novamente separando-os por espaço:')
             try:
-                sorteados.remove(ele)
+                listaResort = list(map(int,input().split()))
             except:
-                print('Erro: aluno inexistente!')
+                print('Entrada de dados inválida!')
                 return
-        for _ in range(resort):
-            aluno = sortear(numAlunos)
-            while aluno in listaResort:
+            resort = len(listaResort)
+            if resort >= len(sorteados):
+                print('Sorteio inválido!')
+                return
+            for ele in listaResort:
+                try:
+                    sorteados.remove(ele)
+                except:
+                    print('Erro: aluno inexistente!')
+                    return
+            for _ in range(resort):
                 aluno = sortear(numAlunos)
-            sorteados.append(aluno)
-        print('Novo sorteio:')
-        print(sorteados)
+                while aluno in listaResort or aluno in sorteados:
+                    aluno = sortear(numAlunos)
+                sorteados.append(aluno)
+            print('Novo sorteio:')
+            print(sorteados)
+            return 0
+        else:
+            return -1
+    loop = resorteio()
+    while loop != -1:
+        loop = resorteio()
 resp = 'S'
 while resp == 'S' or resp == 'SIM':
     Sorteio()
     resp = input('Deseja fazer um novo sorteio? (\'s\', \'n\')').upper()
-
-  
+    

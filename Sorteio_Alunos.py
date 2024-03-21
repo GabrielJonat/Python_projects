@@ -1,5 +1,5 @@
-#Sorteia alunos 200 versão 1.0 created by Gabriel Jonathan
 import random
+rejeitados = 0
 def Sorteio():
     def sortear(stop):
         start = 1
@@ -11,14 +11,17 @@ def Sorteio():
         numAlunos = int(input('Digite o numero de alunos: '))
     except:
         print('Entrada inválida!')
+        print()
         return
     try:
-        maxAlunos = int(input('Quantos alunos desejas sortear? '))
+        maxAlunos = int(input('\nQuantos alunos desejas sortear? '))
     except:
         print('Entrada inválida!')
+        print()
         return
     if maxAlunos >= numAlunos:
-        print('Sorteio inválido!')
+        print('Sorteio inválido! ')
+        print()
         return
     jafoi = []
     sorteados = []
@@ -32,43 +35,57 @@ def Sorteio():
                 aluno = sortear(numAlunos)
             sorteados.append(aluno)
             jafoi.append(aluno)
-    print('Alunos Sorteados:')
+    print('\nAlunos Sorteados:')
     print(sorteados)
-    def resorteio():
-        print('Desejas sortear novamente algum aluno? (\'s\',\'n\')')
+    lista_negra = []
+    rejeitados = 0
+    def resorteio(lista_negra):
+        print('\nDesejas sortear novamente algum aluno? (\'s\',\'n\')')
         resp = input().upper()
         if resp == 'S' or resp == 'SIM':
-            print('Informe os alunos a serem sorteados novamente separando-os por espaço:')
+            print('\nInforme os alunos a serem sorteados novamente separando-os por espaço:')
             try:
                 listaResort = list(map(int,input().split()))
             except:
                 print('Entrada de dados inválida!')
+                print()
                 return
             resort = len(listaResort)
-            if resort >= len(sorteados):
+            global rejeitados
+            rejeitados += resort
+            if rejeitados > numAlunos - maxAlunos:
+                print('\nNão há alunos o suficiente para o sorteio')
+                print()
+                return -1
+            if resort > len(sorteados):
                 print('Sorteio inválido!')
-                return
+                print()
+                return -1
+            lista_negra += listaResort
             for ele in listaResort:
                 try:
                     sorteados.remove(ele)
                 except:
                     print('Erro: aluno inexistente!')
-                    return
+                    print()
+                    return -1
             for _ in range(resort):
                 aluno = sortear(numAlunos)
-                while aluno in listaResort or aluno in sorteados:
+                while aluno in listaResort or aluno in sorteados or aluno in lista_negra:
                     aluno = sortear(numAlunos)
                 sorteados.append(aluno)
-            print('Novo sorteio:')
+            print('\nNovo sorteio:')
             print(sorteados)
             return 0
         else:
             return -1
-    loop = resorteio()
+    loop = resorteio(lista_negra)
     while loop != -1:
-        loop = resorteio()
+        loop = resorteio(lista_negra)
 resp = 'S'
 while resp == 'S' or resp == 'SIM':
+    rejeitados = 0
     Sorteio()
-    resp = input('Deseja fazer um novo sorteio? (\'s\', \'n\')').upper()
+    resp = input('\nDesejas fazer um novo sorteio? (\'s\', \'n\')').upper()
+
     

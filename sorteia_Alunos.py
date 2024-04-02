@@ -75,7 +75,8 @@ def Sorteio():
                     aluno = sortear(numAlunos)
                 sorteados.append(aluno)
             print('\nNovo sorteio:')
-            print(sorteados)
+            print('Alunos anteriores:',sorteados[:resort + 1])
+            print('Alunos resorteados:',sorteados[resort+1:])
             return 0
         else:
             return -1
@@ -87,5 +88,3 @@ while resp == 'S' or resp == 'SIM':
     rejeitados = 0
     Sorteio()
     resp = input('\nDesejas fazer um novo sorteio? (\'s\', \'n\')').upper()
-
-  

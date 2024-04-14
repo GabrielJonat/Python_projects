@@ -1,5 +1,7 @@
+#Master Sorteios by GJ
 import random
 rejeitados = 0
+print('\n\nInicializando Master Sorteios 2000 ... \n\n')
 def Sorteio():
     def sortear(stop):
         start = 1
@@ -25,7 +27,7 @@ def Sorteio():
         return
     jafoi = []
     sorteados = []
-    while len(sorteados) < maxAlunos:                              
+    while len(sorteados) < maxAlunos:
         aluno = sortear(numAlunos)
         if aluno not in jafoi:
             sorteados.append(aluno)
@@ -75,8 +77,7 @@ def Sorteio():
                     aluno = sortear(numAlunos)
                 sorteados.append(aluno)
             print('\nNovo sorteio:')
-            print('Alunos anteriores:',sorteados[:resort + 1])
-            print('Alunos resorteados:',sorteados[resort+1:])
+            print(sorteados)
             return 0
         else:
             return -1
@@ -87,4 +88,5 @@ resp = 'S'
 while resp == 'S' or resp == 'SIM':
     rejeitados = 0
     Sorteio()
-    resp = input('\nDesejas fazer um novo sorteio? (\'s\', \'n\')').upper()
+    resp = input('\nDesejas fazer um novo sorteio? (\'s\', \'n\'):\n').upper()
+print('Encerrando execução do programa ...')

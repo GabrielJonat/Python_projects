@@ -5,7 +5,7 @@ import random
 import os
 
 pygame.font.init()
-WIDTH, HEIGHT = 1000, 500
+WIDTH, HEIGHT = 1000, 600
 TELA = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Star Dodge by Gabriel Jonathan")
 BG = pygame.image.load("bg.jpg")
@@ -47,7 +47,7 @@ def draw(player, elapsedTime, projectiles, slowees, bestTime, average_time, add_
     TELA.blit(bestTimeText, (750, 5))
     TELA.blit(timeText, (10, 5))
     TELA.blit(averageTimeText, (WIDTH // 2 - averageTimeText.get_width() // 2, 5))
-    TELA.blit(chancesText, (832, 460))
+    TELA.blit(chancesText, (832, 550))
     pygame.draw.rect(TELA, "red", player)
     for projectile in projectiles:
         pygame.draw.rect(TELA, "white", projectile)
@@ -72,7 +72,6 @@ def main(bestTime, average_time, best_times, add_chances):
     hit = False
     pause = False
     time_slow = False
-    slow_begin = 0
     vidas_add_increment = 7000
     vidas_count = 0
     vidas = []
@@ -161,6 +160,7 @@ def main(bestTime, average_time, best_times, add_chances):
                 elif slowee.y + slowee.height >= player.y and slowee.colliderect(player):
                     slowees.remove(slowee)
                     time_slow = True
+                    slow_begin = 0
                     break
 
             for vida in vidas[:]:
@@ -197,13 +197,13 @@ def main(bestTime, average_time, best_times, add_chances):
 
         if time_slow:
             proj_vel = 2.1
-            projectile_add_increment += 12
+            projectile_add_increment += 0.8
             if slow_begin == 0:
                 slow_begin = time.time()
 
         if time_slow and time.time() - slow_begin >= 7:  # Compare to current time
             time_slow = False
-            projectile_add_increment = 675
+            projectile_add_increment = 300
             slow_begin = 0  # Reset slow_begin for the next slow down
 
         if not time_slow:

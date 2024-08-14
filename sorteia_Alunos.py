@@ -1,6 +1,7 @@
+#Master Sorteios by GJ
 import random
 rejeitados = 0
-print('\n\nInicializando Master Sorteios 200 ... \n\n')
+print('\n\nInicializando Master Sorteios 2000 ... \n\n')
 def Sorteio():
     def sortear(stop):
         start = 1

@@ -2,14 +2,24 @@ import customtkinter
 from tkinter import messagebox, ttk
 import sqlite3
 from datetime import datetime
+from PIL import Image, ImageTk
+from relatorios import salvar_relatorio
 
 app = customtkinter.CTk()
 app.title('ERP MM Coffee')
 app.geometry('900x600')
 app.config(bg='#F0F8FF')
-app.resizable(False, False)
-
-# Definindo estilos
+app.resizable(True, True)
+# Carregando a imagem
+image = Image.open("logo.png")  # Insira o caminho para a sua imagem aqui
+image = image.resize((200, 200))  # Redimensiona a imagem (opcional)
+# Carrega a imagem do ícone de disquete
+disquete_image = Image.open("disquete.png")
+# Define o tamanho desejado para o ícone (largura, altura)
+tamanho_desejado = (24, 24)
+disquete_image = disquete_image.resize(tamanho_desejado, Image.Resampling.LANCZOS)
+# Converte a imagem para um objeto PhotoImage
+disquete_photo = ImageTk.PhotoImage(disquete_image)
 font_title = ('Arial', 30, 'bold')
 font_label = ('Arial', 14)
 font_button = ('Arial', 14, 'bold')
@@ -21,7 +31,13 @@ entry_bg_color = '#ffffff'
 entry_border_color = '#cccccc'
 
 font1 = ('Times New Roman', 28, 'bold')
-font2 = ('Times New Roman', 18)
+font2 = ('Times New Roman', 18, 'bold')
+
+# Estilo personalizado
+style = ttk.Style()
+style.configure("Treeview.Heading", font=('Arial', 20, 'bold'), foreground="#Daa520", background="#333333", borderwidth=1, relief="solid")
+style.configure("Treeview", rowheight=25, font=('Arial', 14), borderwidth=1, relief="solid")
+
 # Conectando ao banco de dados SQLite
 def connect_db():
     conn = sqlite3.connect('ERP_MM_Coffee.db')
@@ -68,6 +84,10 @@ def connect_db():
 # Funções para alternar entre as telas
 def show_frame(frame):
     frame.tkraise()
+def salvar(subject,table,columns):
+
+    salvar_relatorio(subject, table.get_children(), columns, table)
+    messagebox.showinfo('Sucesso','Relatório salvo na área de trabalho!')
 
 def carregar_resultado_geral():
     conn, cursor = connect_db()
@@ -118,7 +138,6 @@ def carregar_resultado_geral():
                     ''', (resultado, mes))
     conn.commit()
     conn.close()
-    print(resultados.items())
     exibir_resultados()
 
 def filtrar_resultados():
@@ -127,7 +146,7 @@ def filtrar_resultados():
     for row in resultados_table.get_children():
         resultados_table.delete(row)
     cursor.execute('''
-        SELECT * FROM Resultado WHERE data = ?
+        SELECT data, resultado FROM Resultado WHERE data = ?
     ''', (mes,))
     resultados = cursor.fetchall()
     conn.commit()
@@ -177,9 +196,12 @@ def atualizar_info_vendas():
             veredito = 'lucro'
         else:
             veredito = 'prejuízo'
-        info_label.configure(text=f"\nProduto mais vendido do mês: {mais_vendido[0]} ({mais_vendido[1]} unidades)\n"
-                               f"Produto menos vendido do mês: {menos_vendido[0]} ({menos_vendido[1]} unidades)\n"
-                                f"Resultado Geral: {veredito} de R${resultado[0]}")
+        info_label.configure(text=f"\nProduto mais vendido do mês:")
+        info_mark.configure(text=f'{mais_vendido[0]} ({mais_vendido[1]} unidades)\n')
+        info_label01.configure(text=f"Produto menos vendido do mês:")
+        info_mark01.configure(text=f'{menos_vendido[0]} ({menos_vendido[1]} unidades)\n')
+        info_label02.configure(text=f"Resultado Geral:")
+        info_mark02.configure(text=f"{veredito} de R${resultado[0]}")
     else:
         info_label.configure(text="\nNenhum dado de vendas para o mês atual.")
 
@@ -301,6 +323,43 @@ def atualizar_estoque():
                 conn.commit()
                 clear_entries()
                 messagebox.showinfo('Sucesso', 'Estoque atualizado com sucesso!')
+    else:
+        messagebox.showerror('Erro', 'Produto não encontrado!')
+    conn.commit()
+    conn.close()
+
+def atualizar_custo():
+    data = datetime.now().strftime("%m/%Y")
+    produto = produto_combobox2.get()
+    custo = custo_entry.get()
+
+    if not produto:
+        messagebox.showerror('Erro', 'Selecione um produto!')
+        return
+
+    try:
+        custo = float(custo)
+    except ValueError:
+        messagebox.showerror('Erro', 'Formato Inválido! Por favor, insira um custo válido.')
+        return
+    conn = sqlite3.connect('ERP_MM_Coffee.db')
+    cursor = conn.cursor()
+
+    cursor.execute('SELECT * FROM Produtos WHERE descricao = ?', (produto,))
+    produto_existente = cursor.fetchone()
+
+    if produto_existente:
+        # Corrigir a consulta SQL para buscar o preço do produto
+        cursor.execute('SELECT * FROM Produtos WHERE descricao = ?', (produto,))
+        selecProd = cursor.fetchone()
+
+        if selecProd:
+            confirm = messagebox.askyesno('Confirmação', f'Tem certeza que deseja atualizar o custo do produto {produto} para R${str(custo).replace(',','.')}?')
+            if confirm:
+                cursor.execute('UPDATE Produtos SET valor = ? WHERE descricao = ?',(custo, produto))
+                conn.commit()
+                clear_entries()
+                messagebox.showinfo('Sucesso', 'Custo do Produto atualizado com sucesso!')
     else:
         messagebox.showerror('Erro', 'Produto não encontrado!')
     conn.commit()
@@ -430,7 +489,6 @@ def filtrar_vendas():
         else:
             cursor.execute('SELECT produto, quantidade, valor, data FROM Vendas')
     vendas = cursor.fetchall()
-    print(vendas)
 
     for venda in vendas:
         vendas_table.insert('', 'end', values=venda)
@@ -493,7 +551,15 @@ main_frame = customtkinter.CTkFrame(app, bg_color=bg_color)
 main_frame.place(relwidth=1, relheight=1)
 
 title_label = customtkinter.CTkLabel(main_frame, text='ERP MM Coffee ®', font=font_title, text_color='#003785', bg_color='#Daa520', width=300, height=70)
-title_label.pack(pady=30)
+title_label.pack(pady=10)
+
+photo = customtkinter.CTkImage(light_image=image, dark_image=image, size=(400, 200))  # Converte para CTkImage
+# Exibindo a imagem em um label
+image_label = customtkinter.CTkLabel(main_frame, image=photo, text="")  # O texto vazio remove o label de texto padrão
+image_label.pack(pady=6)
+
+info_label4 = customtkinter.CTkLabel(main_frame, text='Sistema de gerenciamento financeiro e controle de estoque', font=font2, text_color='#777777')
+info_label4.place(x=567,y=250)
 
 cadastro_produto_button = customtkinter.CTkButton(main_frame, text='Cadastrar Produto', font=font_button, text_color='#fff',
                                                   fg_color=button_color, hover_color=hover_color,
@@ -579,7 +645,7 @@ exibir_produtos_button = customtkinter.CTkButton(main_frame, text='Exibir Produt
                                                command=lambda: [exibir_produtos(), show_frame(produtos_frame)])
 exibir_produtos_button.pack(pady=5)
 
-atualizar_estoque_button = customtkinter.CTkButton(main_frame, text='Atualizar Estoque', font=font_button, text_color='#fff',
+atualizar_estoque_button = customtkinter.CTkButton(main_frame, text='Alterar Produto', font=font_button, text_color='#fff',
                                                fg_color=button_color, hover_color=hover_color,
                                                command=lambda: show_frame(estoque_frame))
 atualizar_estoque_button.pack(pady=5)
@@ -589,11 +655,25 @@ estatistica_button = customtkinter.CTkButton(main_frame, text='Estatísticas', f
                                                   command=lambda: [exibir_resultados(),show_frame(resultado_frame)])
 estatistica_button.pack(pady=5)
 
-info_label = customtkinter.CTkLabel(main_frame, text='', font=font2, text_color='#00028B', bg_color='#808080', width=900)
+info_label = customtkinter.CTkLabel(main_frame, text='', font=font2, text_color='#fff', bg_color='#808080', width=2000)
 info_label.pack(pady=70)
+info_mark = customtkinter.CTkLabel(main_frame, text='', font=font2, text_color='#00850B', bg_color='#808080')
+info_mark.place(x = 920, y = 622)
+info_label01 = customtkinter.CTkLabel(main_frame, text='', font=font2, text_color='#fff', bg_color='#808080', width=2000)
+info_label01.place(x = -227, y = 638)
+info_mark01 = customtkinter.CTkLabel(main_frame, text='', font=font2, text_color='#F15704', bg_color='#808080')
+info_mark01.place(x = 920, y = 638)
+info_label02 = customtkinter.CTkLabel(main_frame, text='', font=font2, text_color='#fff', bg_color='#808080', width=2000)
+info_label02.place(x = -283, y = 660)
+info_mark02 = customtkinter.CTkLabel(main_frame, text='', font=font2, text_color='#Daa520', bg_color='#808080')
+info_mark02.place(x = 920, y = 660)
 
-info_label2 = customtkinter.CTkLabel(main_frame, text='\na\na\na\na\n', font=font2, text_color='#808080', bg_color='#808080', width=900)
-info_label2.place(x=0,y=507)
+
+info_label3 = customtkinter.CTkLabel(main_frame, text='\na\na\na\na\n', font=font2, text_color='#808080', bg_color='#808080', width=2000)
+info_label3.place(x=0,y=680)
+
+
+
 
 # Chamar a função para atualizar a informação na tela principal
 atualizar_info_vendas()
@@ -624,7 +704,7 @@ quantidade_entry2 = customtkinter.CTkEntry(estoque_frame, width=200)
 quantidade_entry2.place(x=150, y=100)
 
 # Botão para confirmar atualização de estoque
-confirm_button2 = customtkinter.CTkButton(estoque_frame, text='Atualizar', font=font_button, text_color='#fff',
+confirm_button2 = customtkinter.CTkButton(estoque_frame, text='Atualizar Estoque', font=font_button, text_color='#fff',
                                          fg_color=button_color, hover_color=hover_color, command=atualizar_estoque)
 confirm_button2.place(x=40, y=150)
 
@@ -639,6 +719,17 @@ voltar_button_venda2 = customtkinter.CTkButton(estoque_frame, text='Voltar', fon
                                               command=lambda: show_frame(main_frame))
 voltar_button_venda2.place(x=190, y=150)
 
+# Entrada para o custo
+custo_label = customtkinter.CTkLabel(estoque_frame, text='Custo:', font=font2, text_color=text_color)
+custo_label.place(x=20, y=200)
+custo_entry = customtkinter.CTkEntry(estoque_frame, width=200)
+custo_entry.place(x=150, y=200)
+
+# Botão para confirmar atualização de estoque
+confirm_button30 = customtkinter.CTkButton(estoque_frame, text='Atualizar Custo', font=font_button, text_color='#fff',
+                                         fg_color=button_color, hover_color=hover_color, command=atualizar_custo)
+confirm_button30.place(x=190, y=250)
+
 vendas_label = customtkinter.CTkLabel(vendas_frame, text='Vendas Registradas', font=font1, text_color=text_color)
 vendas_label.pack(pady=20)
 
@@ -652,7 +743,7 @@ data_final_label.pack(pady=5)
 data_final_entry = customtkinter.CTkEntry(vendas_frame, width=200)
 data_final_entry.pack(pady=5)
 
-name_label = customtkinter.CTkLabel(vendas_frame, text='Produto', font=font2, text_color=text_color)
+name_label = customtkinter.CTkLabel(vendas_frame, text='Produto', font=font2, text_color='#1465bb')
 name_label.pack(pady=3)
 name_entry = customtkinter.CTkEntry(vendas_frame, width=200)
 name_entry.pack(pady=3)
@@ -667,6 +758,17 @@ vendas_table.heading('Quantidade', text='Quantidade')
 vendas_table.heading('Valor', text='Valor')
 vendas_table.heading('Data', text='Data')
 vendas_table.pack(pady=20, fill='x')
+
+# Cria um botão com o ícone de disquete
+save_button = customtkinter.CTkButton(vendas_frame, image=disquete_photo, text='Gerar Relatório', command= lambda: [salvar('vendas',vendas_table,4)], font=('Arial',15,'bold'))
+save_button.place(x=1100,y=305)
+
+
+# Centralizando o conteúdo das células
+vendas_table.column('Produto', anchor='center', width=250)
+vendas_table.column('Quantidade', anchor='center', width=100)
+vendas_table.column('Valor', anchor='center', width=100)
+vendas_table.column('Data', anchor='center', width=100)
 
 voltar_button = customtkinter.CTkButton(vendas_frame, text='Voltar', font=font_button, text_color='#fff',
                                         fg_color='#161C25', hover_color='#FF7000',
@@ -684,16 +786,24 @@ filtrar_button = customtkinter.CTkButton(produtos_frame, text='Filtrar', font=fo
                                          fg_color=button_color, hover_color=hover_color, command=filtrar_produtos)
 filtrar_button.pack(pady=10)
 
-produtos_table = ttk.Treeview(produtos_frame, columns=('Descricao', 'Valor', 'Estoque'), show='headings')
-produtos_table.heading('Descricao', text='Descrição')
-produtos_table.heading('Valor', text='Preço')
+produtos_table = ttk.Treeview(produtos_frame, columns=('Descrição', 'Valor', 'Estoque'), show='headings')
+produtos_table.heading('Descrição', text='Descrição')
+produtos_table.heading('Valor', text='Custo')
 produtos_table.heading('Estoque', text='Estoque')
 produtos_table.pack(pady=20, fill='x')
+
+produtos_table.column('Descrição', anchor='center', width=250)
+produtos_table.column('Valor', anchor='center', width=100)
+produtos_table.column('Estoque', anchor='center', width=100)
 
 voltar_button = customtkinter.CTkButton(produtos_frame, text='Voltar', font=font_button, text_color='#fff',
                                         fg_color='#161C25', hover_color='#FF7000',
                                         command=lambda: show_frame(main_frame))
 voltar_button.place(x=30, y=12)
+
+save_button2 = customtkinter.CTkButton(produtos_frame, image=disquete_photo, text='Gerar Relatório', command= lambda: [salvar('produtos',produtos_table, 3)], font=('Arial',15,'bold'))
+save_button2.place(x=1100,y=165)
+
 
 # Tela de resultado geral
 resultado_frame = customtkinter.CTkFrame(app, bg_color=bg_color)
@@ -709,6 +819,12 @@ resultados_table = ttk.Treeview(resultado_frame, columns=('Data', 'Resultado'), 
 resultados_table.heading('Data', text='Data')
 resultados_table.heading('Resultado', text='Resultado')
 resultados_table.pack(pady=40, fill='x')
+
+resultados_table.column('Resultado', anchor='center', width=100)
+resultados_table.column('Data', anchor='center', width=100)
+
+save_button3 = customtkinter.CTkButton(resultado_frame, image=disquete_photo, text='Gerar Relatório', command= lambda: [salvar('resultados',resultados_table,2)], font=('Arial',15,'bold'))
+save_button3.place(x=1100,y=105)
 
 
 filtrar_button = customtkinter.CTkButton(resultado_frame, text='Filtrar', font=font_button, text_color='#fff',

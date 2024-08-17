@@ -245,7 +245,7 @@ def atualizar_info_vendas():
         info_label01.configure(text=f"             Produto menos vendido:")
         info_mark01.configure(text=f'{menos_vendido[0]} ({menos_vendido[1]} unidades)\n')
         info_label02.configure(text=f"             Resultado Geral:")
-        info_mark02.configure(text=f"{veredito} de R${resultado[0]}")
+        info_mark02.configure(text=f"{veredito} de R${'{:.2f}'.format(resultado[0])}")
     else:
         info_label.configure(text="\nNenhum dado de vendas para o mês atual.")
 
@@ -580,7 +580,8 @@ def exibir_resultados():
     conn.close()
 
     for resultado in resultados:
-        resultados_table.insert('', 'end', values=resultado)
+        resultadoMod =['{:.2f}'.format(x) if type(x) == float else x for x in resultado]
+        resultados_table.insert('', 'end', values=resultadoMod)
 
 # Função para filtrar vendas por data
 def filtrar_produtos():
